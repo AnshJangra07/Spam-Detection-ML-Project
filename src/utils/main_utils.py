@@ -5,6 +5,7 @@ import os
 import numpy as np
 import pandas as pd
 import pickle
+from scipy import sparse
 from sklearn import linear_model
 import yaml
 
@@ -22,13 +23,18 @@ from src.logger import logging
 
 
     
-def load_numpy_array_data(file_path: str) -> np.array:
+def load_numpy_array_data(file_path: str):
    """
    load numpy array data from file
    file_path: str location of file to load
-   return: np.array data loaded
+   return: np.array, sparse matrix, or pickled payload loaded
    """
    try:
+      if file_path.lower().endswith(".pkl"):
+         with open(file_path, 'rb') as file_obj:
+               return pickle.load(file_obj)
+      if file_path.lower().endswith(".npz"):
+         return sparse.load_npz(file_path)
       with open(file_path, 'rb') as file_obj:
          return np.load(file_obj)
    except Exception as e:
@@ -293,6 +299,6 @@ class MainUtils:
          dir_path = os.path.dirname(file_path)
          os.makedirs(dir_path, exist_ok=True)
          with open(file_path, 'wb') as file_obj:
-               np.save(file_obj, array)
+               pickle.dump(array, file_obj)
       except Exception as e:
          raise SpamhamException(e, sys) from e

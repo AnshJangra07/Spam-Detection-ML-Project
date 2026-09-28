@@ -30,10 +30,12 @@ class ModelTrainer:
       logging.info("Entered initiate_model_trainer method of ModelTrainer class")
 
       try:
-         train_arr = load_numpy_array_data(file_path=self.data_transformation_artifact.transformed_train_file_path)
-         test_arr = load_numpy_array_data(file_path=self.data_transformation_artifact.transformed_test_file_path)
-         x_train, y_train, x_test, y_test = train_arr[:, :-1], train_arr[:, -1], test_arr[:, :-1], test_arr[:, -1]
-         y_test = np.asarray(y_test).ravel()
+         train_payload = load_numpy_array_data(file_path=self.data_transformation_artifact.transformed_train_file_path)
+         test_payload = load_numpy_array_data(file_path=self.data_transformation_artifact.transformed_test_file_path)
+         x_train = train_payload["x"]
+         y_train = np.asarray(train_payload["y"]).ravel()
+         x_test = test_payload["x"]
+         y_test = np.asarray(test_payload["y"]).ravel()
          
          
          model_factory = ModelFactory(model_config_path=self.model_trainer_config.model_config_file_path)

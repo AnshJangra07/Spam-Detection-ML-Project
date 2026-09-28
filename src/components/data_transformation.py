@@ -5,7 +5,7 @@ from typing import List, Tuple
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import OrdinalEncoder
 
 from src.constant.training_pipeline import FEATURE_COLUMN, TARGET_COLUMN
@@ -51,15 +51,19 @@ class DataTransformation:
       self,
       train_df: DataFrame,
       test_df: DataFrame,
-      vectorizer: CountVectorizer = CountVectorizer(),
-   ) -> Tuple[np.ndarray, np.ndarray, CountVectorizer]:
+      vectorizer: TfidfVectorizer = TfidfVectorizer(
+         ngram_range=(1, 2),
+         sublinear_tf=True,
+         max_features=20000,
+      ),
+   ) -> Tuple[np.ndarray, np.ndarray, TfidfVectorizer]:
       try:
          train_data = self.get_stemmed_data(train_df)
          test_data = self.get_stemmed_data(test_df)
          logging.info("Applying vectorizer object on training and testing data")
          vectorized_x_train = vectorizer.fit_transform(train_data)
          vectorized_x_test = vectorizer.transform(test_data)
-         return vectorized_x_train.toarray(), vectorized_x_test.toarray(), vectorizer
+         return vectorized_x_train, vectorized_x_test, vectorizer
       except Exception as e:
          raise SpamhamException(e, sys) from e
 
@@ -106,15 +110,15 @@ class DataTransformation:
             obj=vectorizer,
          )
 
-         train_array = np.c_[x_train, y_train]
-         test_array = np.c_[x_test, y_test]
+         train_payload = {"x": x_train, "y": y_train.ravel()}
+         test_payload = {"x": x_test, "y": y_test.ravel()}
          self.utils.save_numpy_array_data(
             file_path=self.data_transformation_config.transformed_train_file_path,
-            array=train_array,
+            array=train_payload,
          )
          self.utils.save_numpy_array_data(
             file_path=self.data_transformation_config.transformed_test_file_path,
-            array=test_array,
+            array=test_payload,
          )
 
          artifact = DataTransformationArtifact(
