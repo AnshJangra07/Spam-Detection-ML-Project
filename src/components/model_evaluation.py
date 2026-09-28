@@ -1,40 +1,34 @@
-from src.entity.config_entity import ModelEvaluationConfig
-from src.entity.artifact_entity import ModelTrainerArtifact, DataIngestionArtifact, ModelEvaluationArtifact, DataTransformationArtifact
-from sklearn.metrics import f1_score
-from src.exception import SpamhamException
-from src.constant.training_pipeline import TARGET_COLUMN
-from src.logger import logging
-
 import sys
-import pandas as pd
-
-from src.constant.training_pipeline import *
-from src.ml.model.s3_estimator import SpamhamDetector
 from dataclasses import dataclass
 from typing import Optional
-from src.entity.config_entity import Prediction_config
 
-from src.utils.main_utils import MainUtils,load_numpy_array_data
+import numpy as np
+import pandas as pd
+from sklearn.metrics import f1_score
+
+from src.constant.training_pipeline import FEATURE_COLUMN, TARGET_COLUMN
+from src.entity.artifact_entity import (
+   ClassificationMetricArtifact,
+   DataIngestionArtifact,
+   DataTransformationArtifact,
+   ModelEvaluationArtifact,
+   ModelTrainerArtifact,
+)
+from src.entity.config_entity import ModelEvaluationConfig
+from src.exception import SpamhamException
+from src.logger import logging
+from src.ml.model.s3_estimator import SpamhamDetector
 from src.ml.metric import calculate_metric
-from src.entity.artifact_entity import ClassificationMetricArtifact
+from src.utils.main_utils import MainUtils
 
 
 @dataclass
 class EvaluateModelResponse:
    trained_model_f1_score: float
-   best_model_f1_score: float
+   best_model_f1_score: Optional[float]
    is_model_accepted: bool
    changed_accuracy: float
-   best_model_metric_artifact: ClassificationMetricArtifact
-
-def convert_test_numpy_array_to_dataframe(array:str):
-   """Converts numpy array to dataframe"""
-   prediction_config = Prediction_config().__dict__
-   columns = prediction_config['prediction_schema']['columns'].keys()
-   
-   
-   dataframe = pd.DataFrame(array, columns=columns)
-   return dataframe
+   best_model_metric_artifact: Optional[ClassificationMetricArtifact]
 
 class ModelEvaluation:
 
@@ -65,30 +59,36 @@ class ModelEvaluation:
    def evaluate_model(self) -> EvaluateModelResponse:
       try:
          test_df = pd.read_csv(self.data_ingestion_artifact.test_file_path)
-         # x_test = pd.read_csv(self.data_ingestion_artifact.test_file_path)
-         
-         x_test, y_test = test_df[FEATURE_COLUMN],test_df[[TARGET_COLUMN]]
-         
-
-         
+         x_test = test_df[FEATURE_COLUMN].fillna("").astype(str).tolist()
+         encoder = self.utils.load_object(
+            file_path=self.data_transformation_artifact.transformed_encoder_object_file_path
+         )
+         y_test = np.asarray(encoder.transform(test_df[[TARGET_COLUMN]])).ravel()
          trained_model = self.utils.load_object(file_path=self.model_trainer_artifact.trained_model_file_path)
-         # y.replace(TargetValueMapping().to_dict(), inplace=True)
-         y_hat_trained_model = trained_model.predict(x_test)
-
-         trained_model_f1_score = f1_score(y_test, y_hat_trained_model)
+         y_hat_trained_model = np.asarray(trained_model.predict(x_test)).ravel()
+         trained_model_f1_score = f1_score(
+            y_test, y_hat_trained_model, average="binary", zero_division=0
+         )
          best_model_f1_score = None
          best_model_metric_artifact = None
          best_model = self.get_best_model()
          if best_model is not None:
-               y_hat_best_model = best_model.predict(x_test)
-               best_model_f1_score = f1_score(y_test, y_hat_best_model)
-               best_model_metric_artifact = calculate_metric(best_model, x_test, y_test)
-         # calucate how much percentage training model accuracy is increased/decreased
+               y_hat_best_model = np.asarray(best_model.predict(x_test)).ravel()
+               best_model_f1_score = f1_score(
+                  y_test, y_hat_best_model, average="binary", zero_division=0
+               )
+               best_model_metric_artifact = calculate_metric(
+                  best_model, x_test, y_test
+               )
          tmp_best_model_score = 0 if best_model_f1_score is None else best_model_f1_score
+         changed_score = trained_model_f1_score - tmp_best_model_score
          result = EvaluateModelResponse(trained_model_f1_score=trained_model_f1_score,
                                           best_model_f1_score=best_model_f1_score,
-                                          is_model_accepted=trained_model_f1_score > tmp_best_model_score,
-                                          changed_accuracy=trained_model_f1_score - tmp_best_model_score,
+                                          is_model_accepted=(
+                                             best_model_f1_score is None
+                                             or changed_score >= self.model_eval_config.changed_threshold_score
+                                          ),
+                                          changed_accuracy=changed_score,
                                           best_model_metric_artifact=best_model_metric_artifact
                                           )
          logging.info(f"Result: {result}")

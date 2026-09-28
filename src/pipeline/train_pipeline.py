@@ -151,7 +151,7 @@ class TrainPipeline:
       except Exception as e:
          raise SpamhamException(e, sys)
 
-   def run_pipeline(self) -> None:
+   def run_pipeline(self) -> dict:
       logging.info("Entered the run_pipeline method of TrainPipeline class")
 
       try:
@@ -166,6 +166,7 @@ class TrainPipeline:
          
          model_trainer_artifact = self.start_model_trainer(data_transformation_artifact= data_transformation_artifact)
          logging.info("model trained successfully")
+         metrics = model_trainer_artifact.metric_artifact.__dict__
          
          
          model_evaluation_artifact = self.start_model_evaluation(
@@ -174,14 +175,25 @@ class TrainPipeline:
          data_transformation_artifact= data_transformation_artifact
          )
          if not model_evaluation_artifact.is_model_accepted:
-               logging.info(f"Model not accepted.")
-               return None
-         model_pusher_artifact = self.start_model_pusher(
-               model_trainer_artifact=model_trainer_artifact
-         )
+            logging.info("Model not accepted.")
+            logging.info("Training done, but the candidate was not published.")
+            return {
+               "metrics": metrics,
+               "model_published": False,
+               "message": "Training done. Candidate model was not published; the existing model was kept.",
+            }
 
+         model_pusher_artifact = self.start_model_pusher(
+            model_trainer_artifact=model_trainer_artifact
+         )
+         logging.info("Training done. New model published. Metrics: %s", metrics)
 
          logging.info("Exited the run_pipeline method of TrainPipeline class")
+         return {
+            "metrics": metrics,
+            "model_published": model_pusher_artifact is not None,
+            "message": "Training done. New model published.",
+         }
 
       except Exception as e:
          raise SpamhamException(e, sys) from e 

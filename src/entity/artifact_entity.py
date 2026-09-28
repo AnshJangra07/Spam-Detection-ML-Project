@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -27,6 +28,7 @@ class DataTransformationArtifact:
 
 @dataclass
 class ClassificationMetricArtifact:
+   accuracy_score:float
    f1_score:float
    precision_score:float
    recall_score:float
@@ -43,7 +45,7 @@ class ModelEvaluationArtifact:
    changed_accuracy:float
    best_model_path:str 
    trained_model_path:str 
-   best_model_metric_artifact: ClassificationMetricArtifact
+   best_model_metric_artifact: Optional[ClassificationMetricArtifact]
 
 
 @dataclass

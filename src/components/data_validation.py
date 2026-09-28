@@ -37,12 +37,15 @@ class DataValidation:
       """
 
       try:
-         required_columns = self._schema_config["columns"]
-
-         status = len(dataframe.columns) == len(required_columns)
+         required_columns = set(self._schema_config["columns"])
+         actual_columns = list(dataframe.columns)
+         status = (
+            len(actual_columns) == len(required_columns)
+            and set(actual_columns) == required_columns
+         )
 
          logging.info(
-               f"Is required column count valid: {status}"
+            f"Required columns: {required_columns}; actual columns: {set(actual_columns)}; valid: {status}"
          )
 
          return status

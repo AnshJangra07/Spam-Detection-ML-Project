@@ -2,11 +2,17 @@ html {
   height: 100%;
 }
 body {
-  margin:0;
-  padding:0;
+  margin: 0;
+  padding: 0;
   font-family: sans-serif;
-  background: linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 0%, rgba(2, 73, 0, 0.5) 75%, rgb(0, 49, 2) 100%), url("/static/images/spam.jpg");
-
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 0, 0, 0.1) 0%,
+      rgba(2, 73, 0, 0.5) 75%,
+      rgb(0, 49, 2) 100%
+    ),
+    url("/static/images/spam.jpg");
 }
 
 .login-box {
@@ -46,13 +52,13 @@ body {
 }
 .login-box .user-box label {
   position: absolute;
-  top:0;
+  top: 0;
   left: 0;
   padding: 10px 0;
   font-size: 16px;
   color: rgb(37, 185, 0);
   pointer-events: none;
-  transition: .5s;
+  transition: 0.5s;
 }
 
 .login-box .user-box input:focus ~ label,
@@ -66,28 +72,29 @@ body {
 .login-box button {
   position: relative;
   display: inline-block;
-  padding: 10px 20px; 
-  background:rgb(37, 185, 0);
+  padding: 10px 20px;
+  background: rgb(37, 185, 0);
   color: #ffffff;
   font-size: 16px;
   border-color: #51ff00;
   text-decoration: none;
   text-transform: uppercase;
   overflow: hidden;
-  transition: .5s;
+  transition: 0.5s;
   margin-top: 40px;
-  letter-spacing: 4px
+  letter-spacing: 4px;
 }
 
 .login-box button:hover {
-  background:rgb(25, 126, 0);
+  background: rgb(25, 126, 0);
   color: #fff;
   border-radius: 5px;
   border-color: rgb(0, 253, 0);
-  box-shadow: 0 0 5px rgb(37, 185, 0),
-              0 0 25px rgb(37, 185, 0),
-              0 0 50px rgb(37, 185, 0),
-              0 0 100px rgb(37, 185, 0);
+  box-shadow:
+    0 0 5px rgb(37, 185, 0),
+    0 0 25px rgb(37, 185, 0),
+    0 0 50px rgb(37, 185, 0),
+    0 0 100px rgb(37, 185, 0);
 }
 
 .login-box button span {
@@ -95,21 +102,62 @@ body {
   display: block;
 }
 
+.login-box button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
 
+#training-status {
+  min-height: 1.5em;
+  margin: 1.5rem 0 0;
+  color: #ffffff;
+  text-align: center;
+}
 
+#training-metrics {
+  margin-top: 1.5rem;
+  color: #ffffff;
+}
+
+#training-metrics h3 {
+  margin-bottom: 0.75rem;
+  color: rgb(0, 255, 13);
+  text-align: center;
+}
+
+#training-metrics dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 0;
+}
+
+#training-metrics dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+#training-metrics dt {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+#training-metrics dd {
+  margin: 0;
+  font-weight: 700;
+}
 
 .footer {
   padding: 3rem 0rem;
   color: rgba(255, 255, 255, 0.39);
-  font-family: 'Courier New', Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
 }
 
 .prediction {
   color: rgb(9, 255, 0);
   font-size: 30px;
-  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
   padding: 0rem 3rem;
 }
-
 
 /* popup */

@@ -1,5 +1,6 @@
-from sklearn.metrics import (confusion_matrix, f1_score, precision_score,
-                             recall_score)
+import numpy as np
+from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
+                             precision_score, recall_score)
 
 from src.entity.artifact_entity import ClassificationMetricArtifact
 
@@ -10,11 +11,13 @@ def calculate_metric(model, x, y) -> ClassificationMetricArtifact:
    x: input feature
    y: output feature
    """
-   yhat = model.predict(x)
+   y = np.asarray(y).ravel()
+   yhat = np.asarray(model.predict(x)).ravel()
    classification_metric = ClassificationMetricArtifact(
-      f1_score=f1_score(y, yhat, average='weighted'),
-      recall_score=recall_score(y, yhat, average='weighted'),
-      precision_score=precision_score(y, yhat, average='weighted'),
+      accuracy_score=accuracy_score(y, yhat),
+      f1_score=f1_score(y, yhat, average='binary', zero_division=0),
+      recall_score=recall_score(y, yhat, average='binary', zero_division=0),
+      precision_score=precision_score(y, yhat, average='binary', zero_division=0),
    )
    return classification_metric
 

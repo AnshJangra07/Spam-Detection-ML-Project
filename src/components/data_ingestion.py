@@ -6,6 +6,7 @@ from pandas import DataFrame
 from sklearn.model_selection import train_test_split
 
 from src.constant.database import DATABASE_NAME, COLLECTION_NAME
+from src.constant.training_pipeline import FEATURE_COLUMN, TARGET_COLUMN
 from src.entity.config_entity import DataIngestionConfig
 from src.entity.artifact_entity import DataIngestionArtifact
 from src.exception import SpamhamException
@@ -36,7 +37,12 @@ class DataIngestion:
       logging.info("Entered split_data_as_train_test method of Data_Ingestion class")
 
       try:
-         train_set, test_set = train_test_split(dataframe, test_size=self.data_ingestion_config.train_test_split_ratio)
+         train_set, test_set = train_test_split(
+               dataframe,
+               test_size=self.data_ingestion_config.train_test_split_ratio,
+               random_state=42,
+               stratify=dataframe[TARGET_COLUMN],
+            )
 
          logging.info("Performed train test split on the dataframe")
 
@@ -74,6 +80,9 @@ class DataIngestion:
          customer_data = SpamhamData()
          customer_dataframe = customer_data.export_collection_as_dataframe(
                collection_name=COLLECTION_NAME
+         )
+         customer_dataframe = customer_dataframe.rename(
+               columns={"Label": TARGET_COLUMN, "Message": FEATURE_COLUMN}
          )
          
          logging.info(f"Shape of dataframe: {customer_dataframe.shape}")

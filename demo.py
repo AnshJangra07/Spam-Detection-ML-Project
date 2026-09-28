@@ -1,12 +1,13 @@
-import os
-from dotenv import load_dotenv
-from pymongo import MongoClient
-load_dotenv()
+from src.pipeline.train_pipeline import TrainPipeline
 
-mongo_url = os.getenv("MONGODB_URL_KEY")
-print("Mongo URL loaded:", bool(mongo_url))
-client = MongoClient(mongo_url)
-print("Connected:", client.admin.command("ping"))
-db = client["spam_ham_database"]
-print("Database:", db.name)
-print("Collections:", db.list_collection_names())
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print("Starting Spam-Ham Training Pipeline")
+    print("=" * 60)
+
+    TrainPipeline().run_pipeline()
+
+    print("=" * 60)
+    print("Training Pipeline Completed")
+    print("=" * 60)

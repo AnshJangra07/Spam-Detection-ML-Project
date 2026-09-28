@@ -1,49 +1,123 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Spam Ham Detector</title>
   <link rel="stylesheet" href="../static/css/style.css">
 
 </head>
+
 <body>
-<!-- partial:index.partial.html -->
-<div class="login-box">
-  <h2>Spam Ham Detector</h2>
-  <form>
+  <!-- partial:index.partial.html -->
+  <div class="login-box">
+    <h2>Spam Ham Detector</h2>
+    <form id="training-form">
 
-    
-    <button id = "training" onclick="myFunction"  href="/train">
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-       Train Model
-    </button>
+      <button id="training" type="submit">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        Train Model
+      </button>
 
-    <!-- <button         onclick="window.open('/predict'), '_self' " > -->
-      <button onclick = "window.open('/predict', 'prediction tab')">
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-       SpamHam Detector
-    </button>
-  </form>
- 
-  <footer class="footer">
+      <button type="button" onclick="window.location.href='/predict'">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        SpamHam Detector
+      </button>
+    </form>
 
-    <h4>Copyright &copy; <a style="color: #ffffff;" href = "https://github.com/anshjangra07">Ansh Jangra</a></h4>
+    <p id="training-status" role="status" aria-live="polite">
+      Train a model to see its evaluation metrics.
+    </p>
+    <section id="training-metrics" aria-live="polite" hidden>
+      <h3>Model metrics</h3>
+      <dl>
+        <div>
+          <dt>Accuracy</dt>
+          <dd id="metric-accuracy"></dd>
+        </div>
+        <div>
+          <dt>Precision</dt>
+          <dd id="metric-precision"></dd>
+        </div>
+        <div>
+          <dt>Recall</dt>
+          <dd id="metric-recall"></dd>
+        </div>
+        <div>
+          <dt>F1 score</dt>
+          <dd id="metric-f1"></dd>
+        </div>
+      </dl>
+    </section>
 
-  </footer>
-</div>
-<!-- partial -->
-  
-<script>
-  function myFunction() {
-    document.getElementById("training").innerHTML = "Prediction started";
-  }
+    <footer class="footer">
+
+      <h4>Copyright &copy; <a style="color: #ffffff;" href="https://github.com/anshjangra07">Ansh Jangra</a></h4>
+
+    </footer>
+  </div>
+  <script>
+    const trainingForm = document.getElementById('training-form');
+    const trainingButton = document.getElementById('training');
+    const trainingStatus = document.getElementById('training-status');
+    const metricsPanel = document.getElementById('training-metrics');
+
+    function showMetrics(metrics) {
+      for (const name of ['accuracy', 'precision', 'recall', 'f1']) {
+        document.getElementById(`metric-${name}`).textContent =
+          `${(metrics[`${name}_score`] * 100).toFixed(2)}%`;
+      }
+      metricsPanel.hidden = false;
+    }
+
+    async function checkTrainingStatus() {
+      let result;
+      do {
+        const response = await fetch('/train/status');
+        if (!response.ok) throw new Error('Could not check training status.');
+        result = await response.json();
+        trainingStatus.textContent = result.message;
+        trainingButton.disabled = result.status === 'running';
+        if (result.status === 'running') {
+          await new Promise((resolve) => window.setTimeout(resolve, 1500));
+        }
+      } while (result.status === 'running');
+
+      trainingButton.disabled = false;
+      if (result.status === 'completed' && result.metrics) {
+        showMetrics(result.metrics);
+      }
+    }
+
+    trainingForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      trainingButton.disabled = true;
+      trainingStatus.textContent = 'Training...';
+      metricsPanel.hidden = true;
+
+      try {
+        const response = await fetch('/train', { method: 'POST' });
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail || 'Could not start training.');
+        }
+        await checkTrainingStatus();
+      } catch (error) {
+        trainingStatus.textContent = error.message;
+        trainingButton.disabled = false;
+      }
+    });
+
+    checkTrainingStatus().catch(() => { });
   </script>
-  
+  <!-- partial -->
+
 </body>
+
 </html>

@@ -1,5 +1,8 @@
-from fastapi import FastAPI, Request
+import os
+from threading import Lock
 from typing import Optional
+
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from uvicorn import run as app_run
@@ -12,17 +15,31 @@ load_dotenv()
 from src.pipeline.prediction_pipeline import PredictionPipeline
 from src.pipeline.train_pipeline import TrainPipeline
 from src.constant.application import *
+from src.logger import logging
 
 import warnings
 warnings.filterwarnings('ignore')
 
 app = FastAPI()
+training_status = {
+    "status": "idle",
+    "message": "Train a model to see its evaluation metrics.",
+    "metrics": None,
+    "model_published": False,
+}
+training_status_lock = Lock()
 
 
 templates = Jinja2Templates(directory='templates')
 
 
-origins = ["*"]
+origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ORIGINS", "http://localhost:3000,http://localhost:8000"
+    ).split(",")
+    if origin.strip()
+]
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -46,21 +63,51 @@ class DataForm:
         self.text = form.get('input_text')
         
 
-@app.get("/train")
-async def trainRouteClient():
+def run_training_task():
     try:
-        train_pipeline = TrainPipeline()
+        result = TrainPipeline().run_pipeline()
+        with training_status_lock:
+            training_status.update(
+                status="completed",
+                message=result["message"],
+                metrics=result["metrics"],
+                model_published=result["model_published"],
+            )
+    except Exception as error:
+        logging.error(f"Training failed: {error}")
+        with training_status_lock:
+            training_status.update(
+                status="failed",
+                message="Training failed. Check the application logs for details.",
+                metrics=None,
+                model_published=False,
+            )
 
-        train_pipeline.run_pipeline()
 
-        return Response("Training successful !!")
+@app.post("/train")
+async def train_route(background_tasks: BackgroundTasks):
+    with training_status_lock:
+        if training_status["status"] == "running":
+            raise HTTPException(status_code=409, detail="Training is already in progress")
+        training_status.update(
+            status="running",
+            message="Training...",
+            metrics=None,
+            model_published=False,
+        )
 
-    except Exception as e:
-        return Response(f"Error Occurred! {e}")
+    background_tasks.add_task(run_training_task)
+    return {"status": "running", "message": "Training..."}
+
+
+@app.get("/train/status")
+async def train_status_route():
+    with training_status_lock:
+        return dict(training_status)
 
 
 @app.get("/")
-async def predictGetRouteClient(request: Request):
+async def home_route(request: Request):
     try:
 
         return templates.TemplateResponse(
@@ -73,7 +120,7 @@ async def predictGetRouteClient(request: Request):
         return Response(f"Error Occurred! {e}")
     
 @app.get("/predict")
-async def predictGetRouteClient(request: Request):
+async def predict_form_route(request: Request):
     try:
 
         return templates.TemplateResponse(
@@ -105,12 +152,13 @@ async def predictRouteClient(request: Request):
        
         
         return templates.TemplateResponse(
-            "prediction.html",
-            {"request": request, "context": True, "prediction": prediction[0]}
+            request=request,
+            name="prediction.html",
+            context={"context": True, "prediction": prediction[0]},
         )
 
     except Exception as e:
-        return {"status": False, "error": f"{e}"}
+        raise HTTPException(status_code=500, detail="Prediction failed") from e
 
 
 if __name__ == "__main__":
