@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Spamham_prediction</title>
+  <link rel="stylesheet" href="../static/css/style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<div class="login-box">
+  {%if context is true%}
+    <div class = "prediction">
+        <p  >The text is: <strong> 
+          {%if prediction==0%}
+           <b>Ham</b>
+           {%else%}
+           <b>Spam</b>
+           {%endif%}
+        </strong> </p>
+    </div>
+    <div class = "button" >
+      <button onclick="window.open('/')" >  Go Back to Home </button>
+  </div>
+  
+
+  {% else %}
+  <h2>Spam Ham Detector</h2>
+  <form method="POST" action= "/predict">
+    <div class="user-box">
+      <input type="text" id="input_text" name="input_text" required="">
+      <label>text</label>
+    </div>
+    
+    <div class = "button" >
+        <button type="submit" > Predict</button>
+    </div>
+
+    {%endif%}
+
+
+
+  </form>
+  <footer class="footer">
+
+    <h4>Copyright &copy; <a style="color: #ffffff;" href = "https://github.com/anshjangra07">Ansh Jangra</a></h4>
+  
+  </footer>
+</div>
+<!-- partial -->
+
+  
+</body>
+</html>

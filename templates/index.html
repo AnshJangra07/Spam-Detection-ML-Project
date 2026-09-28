@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Spam Ham Detector</title>
+  <link rel="stylesheet" href="../static/css/style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<div class="login-box">
+  <h2>Spam Ham Detector</h2>
+  <form>
+
+    
+    <button id = "training" onclick="myFunction"  href="/train">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+       Train Model
+    </button>
+
+    <!-- <button         onclick="window.open('/predict'), '_self' " > -->
+      <button onclick = "window.open('/predict', 'prediction tab')">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+       SpamHam Detector
+    </button>
+  </form>
+ 
+  <footer class="footer">
+
+    <h4>Copyright &copy; <a style="color: #ffffff;" href = "https://github.com/anshjangra07">Ansh Jangra</a></h4>
+
+  </footer>
+</div>
+<!-- partial -->
+  
+<script>
+  function myFunction() {
+    document.getElementById("training").innerHTML = "Prediction started";
+  }
+  </script>
+  
+</body>
+</html>
