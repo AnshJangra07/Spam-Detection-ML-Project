@@ -1,75 +1,52 @@
 # Spam-Ham Detection
 
-A spam detection project that classifies SMS-like text messages as spam or ham using a machine learning pipeline built with Python, scikit-learn, MongoDB, and AWS S3.
-
-The project includes:
-
-- end-to-end training pipeline
-- data validation and transformation
-- model selection using cross-validation on F1 score
-- model promotion against the existing deployed model
-- FastAPI web app for training and prediction
+A machine learning app that classifies SMS messages as spam or ham, with a FastAPI interface for training and prediction.
 
 ## Project overview
 
-This project reads messages from MongoDB, preprocesses them, vectorizes text, trains multiple classifiers, evaluates the best candidate on a held-out test set, and publishes the model when it improves the current deployed version.
-
-The current pipeline uses:
-
-- TF-IDF vectorization with n-grams
-- LinearSVC
-- MultinomialNB
-- 5-fold cross-validation
-- F1 as the optimization metric
+The pipeline cleans and stems messages, then converts them to TF-IDF features (1-2 word n-grams). It tunes `MultinomialNB` and `LinearSVC` with 5-fold cross-validation, optimizing F1. The best candidate is tested on held-out data and promoted only if it meets the configured threshold and improves on the current model.
 
 ## Tech stack
 
-- Python 3.11
-- pandas, numpy, scikit-learn
-- NLTK-based message preprocessing
-- MongoDB for training data storage
-- AWS S3 for model storage and deployment comparison
-- FastAPI + Jinja2 + static HTML/CSS for the web app
+Python 3.11, pandas, NumPy, scikit-learn, NLTK, FastAPI, Jinja2, MongoDB, and AWS S3.
 
 ## Architecture
 
-![Training pipeline](flowchart/training%20pipeline.png)
-
-![Prediction pipeline](flowchart/prediction%20pipeline.png)
+![Training and Prediction pipeline](flowchart/pipeline.png)
 
 ## Folder structure
 
 ```text
 .
 ├── app.py                     # FastAPI app entry point and routes
-├── demo.py                   # Training/demo runner
+├── demo.py                    # Training/demo runner
 ├── upload_data_mongodb.py     # Upload dataset to MongoDB
-├── train_and_export.py       # Model training/export script
-├── requirements.txt          # Python dependencies
-├── .env                      # Local environment variables (not committed)
-├── config/                   # Model and schema configs
-│   ├── model.yaml            # Model search configuration
-│   ├── prediction_schema.yml # Prediction schema
-│   └── schema.yaml           # Training schema validation
-├── src/                      # Main project source code
-│   ├── artifact/             # Generated training artifacts
-│   ├── cloud_storage/        # AWS/S3 integration
-│   ├── components/           # Data ingestion, validation, transformation, training, eval, pusher
-│   ├── configuration/       # MongoDB and service config
-│   ├── constant/             # Pipeline constants and file names
-│   ├── data_access/         # MongoDB data access layer
-│   ├── entity/               # Data/config artifact definitions
-│   ├── exception/            # Custom exception handling
-│   ├── logger/               # Logging setup
-│   ├── ml/                   # Model wrapper and preprocessing logic
-│   ├── pipeline/             # Training and prediction orchestration
-│   └── utils/                # Shared helper functions
-├── static/                   # CSS and UI assets
-├── templates/                # HTML templates for web app
-├── notebooks/                # Jupyter notebooks and experiments
-├── artifacts/                # Saved model/training outputs
-├── spamham.csv               # Main dataset
-└── README.md                 # Project documentation
+├── train_and_export.py        # Model training/export script
+├── requirements.txt           # Python dependencies
+├── .env                       # Local environment variables (not committed)
+├── config/                    # Model and schema configs
+│   ├── model.yaml             # Model search configuration
+│   ├── prediction_schema.yml  # Prediction schema
+│   └── schema.yaml            # Training schema validation
+├── src/                       # Main project source code
+│   ├── artifact/              # Generated training artifacts
+│   ├── cloud_storage/         # AWS/S3 integration
+│   ├── components/            # Data ingestion, validation, transformation, training, eval, pusher
+│   ├── configuration/         # MongoDB and service config
+│   ├── constant/              # Pipeline constants and file names
+│   ├── data_access/           # MongoDB data access layer
+│   ├── entity/                # Data/config artifact definitions
+│   ├── exception/             # Custom exception handling
+│   ├── logger/                # Logging setup
+│   ├── ml/                    # Model wrapper and preprocessing logic
+│   ├── pipeline/              # Training and prediction orchestration
+│   └── utils/                 # Shared helper functions
+├── static/                    # CSS and UI assets
+├── templates/                 # HTML templates for web app
+├── notebooks/                 # Jupyter notebooks and experiments
+├── artifacts/                 # Saved model/training outputs
+├── spamham.csv                # Main dataset
+└── README.md                  # Project documentation
 ```
 
 ### Latest training run
@@ -124,40 +101,6 @@ The pipeline expects:
 
 Keep `.env` local and do not commit credentials to version control.
 
-## Data flow
-
-### 1) Load data into MongoDB
-
-```powershell
-python upload_data_mongodb.py
-```
-
-This uploads the training records into MongoDB so the ingestion layer can read them.
-
-### 2) Run the training pipeline
-
-```powershell
-python demo.py
-```
-
-Or directly:
-
-```powershell
-python -c "from src.pipeline.train_pipeline import TrainPipeline; print(TrainPipeline().run_pipeline())"
-```
-
-### 3) Model selection and evaluation
-
-The pipeline:
-
-- reads training data from storage
-- validates schema and feature consistency
-- applies text preprocessing and TF-IDF vectorization
-- tunes candidate models using cross-validation
-- selects the best model using F1 score
-- compares it against the current deployed model
-- publishes only when the new model improves enough to justify replacement
-
 ## Training and evaluation metrics
 
 The project logs held-out metrics from the test split, including:
@@ -183,6 +126,22 @@ http://127.0.0.1:5001
 
 > If port 5001 is already in use, change the port in [src/constant/application.py](src/constant/application.py) to a free value.
 
+## Run with Docker
+
+Make sure Docker Desktop is running and that the root `.env` file is configured as described above. Build the image from the project root:
+
+```powershell
+docker build -t spam-ham-detection .
+```
+
+Start the app and pass the MongoDB/AWS settings from `.env` into the container:
+
+```powershell
+docker run --rm -p 5001:5001 --env-file .env spam-ham-detection
+```
+
+Open `http://localhost:5001`. The container starts the FastAPI app with Uvicorn; training and model storage still require access to the configured MongoDB database and AWS S3 bucket. The `.dockerignore` file excludes `.env`, local virtual environments, notebooks, and generated training artifacts from the image.
+
 ## API routes
 
 | Method | Route           | Description                                |
@@ -199,24 +158,3 @@ http://127.0.0.1:5001
 - `config/prediction_schema.yml`: prediction input schema
 - `config/model.yaml`: model candidates and search grids
 - `src/constant/`: project-level constants like column names, buckets, and config defaults
-
-## Future improvements
-
-A few improvements I would consider next:
-
-- add model version tracking with timestamped metadata
-- store training logs and metrics in MongoDB or a CSV report
-- improve the frontend with better status states and metric cards
-- add an API response model for cleaner prediction output
-- deploy the app with Docker for easier reproducibility
-- extend the pipeline with more advanced text features or transformer-based models
-
-## Notes
-
-- The model-promotion logic is designed to keep the current deployed model unless the new candidate shows a meaningful improvement.
-- The home page surfaces the current training result and metrics in a simple UI.
-- Prediction uses the latest model that has been accepted and stored for production use.
-
-## License
-
-This project is intended for learning, portfolio, and experimental use.
