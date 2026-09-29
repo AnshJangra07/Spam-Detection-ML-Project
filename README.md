@@ -72,16 +72,16 @@ The current pipeline uses:
 └── README.md                 # Project documentation
 ```
 
+### Latest training run
 
-### Final verified score
-From the latest verified training run:
+Training completed, but the candidate model was not published; the existing model was kept.
 
-- Accuracy: 97.64%
-- Precision: 97.47%
-- Recall: 91.02%
-- F1: 94.13%
+- Accuracy: 98.23%
+- Precision: 96.85%
+- Recall: 94.56%
+- F1: 95.69%
 
-These are the fresh metrics produced by the current pipeline and are not hard-coded values.
+These are the candidate model's evaluation metrics and do not describe the currently published model.
 
 This makes the project a good example of an end-to-end machine learning application with a real deployment decision step.
 
@@ -90,7 +90,6 @@ This makes the project a good example of an end-to-end machine learning applicat
 ![UI Screenshot 1](screenshot/1.png)
 
 ![UI Screenshot 2](screenshot/2.png)
-
 
 ## Setup
 
@@ -200,7 +199,6 @@ http://127.0.0.1:5001
 - `config/prediction_schema.yml`: prediction input schema
 - `config/model.yaml`: model candidates and search grids
 - `src/constant/`: project-level constants like column names, buckets, and config defaults
-
 
 ## Future improvements
 
