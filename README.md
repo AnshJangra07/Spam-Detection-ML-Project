@@ -72,8 +72,8 @@ The current pipeline uses:
 └── README.md                 # Project documentation
 ```
 
-### Verified current metrics
 
+### Final verified score
 From the latest verified training run:
 
 - Accuracy: 97.64%
@@ -82,6 +82,15 @@ From the latest verified training run:
 - F1: 94.13%
 
 These are the fresh metrics produced by the current pipeline and are not hard-coded values.
+
+This makes the project a good example of an end-to-end machine learning application with a real deployment decision step.
+
+## Demo screenshots
+
+![UI Screenshot 1](screenshot/1.png)
+
+![UI Screenshot 2](screenshot/2.png)
+
 
 ## Setup
 
@@ -192,37 +201,6 @@ http://127.0.0.1:5001
 - `config/model.yaml`: model candidates and search grids
 - `src/constant/`: project-level constants like column names, buckets, and config defaults
 
-## Results summary
-
-This project was designed as a practical ML deployment workflow rather than a pure research notebook. The result is a pipeline that can:
-
-- ingest labeled spam/ham data from MongoDB
-- validate schema and data quality
-- transform raw text into TF-IDF features
-- compare candidate models using F1-based cross-validation
-- promote the model only when it meaningfully improves the current production version
-- serve predictions through a small FastAPI app
-
-### Final verified score
-
-- Accuracy: 97.64%
-- Precision: 97.47%
-- Recall: 91.02%
-- F1: 94.13%
-
-This makes the project a good example of an end-to-end machine learning application with a real deployment decision step.
-
-## Demo screenshots
-
-```text
-screenshot/
-├── 1.png
-└── 2.png
-```
-
-![UI Screenshot 1](screenshot/1.png)
-
-![UI Screenshot 2](screenshot/2.png)
 
 ## Future improvements
 

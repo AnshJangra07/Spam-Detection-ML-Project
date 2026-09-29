@@ -5,6 +5,13 @@ from src.constant.env_variable import AWS_SECRET_ACCESS_KEY_ENV_KEY, AWS_ACCESS_
 load_dotenv()
 
 
+def _normalize_credential(value: str) -> str:
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        return value[1:-1].strip()
+    return value
+
+
 class S3Client:
 
     s3_client=None
@@ -18,6 +25,9 @@ class S3Client:
                 raise Exception(f"Environment variable: {AWS_ACCESS_KEY_ID_ENV_KEY} is not not set.")
             if __secret_access_key is None:
                 raise Exception(f"Environment variable: {AWS_SECRET_ACCESS_KEY_ENV_KEY} is not set.")
+
+            __access_key_id = _normalize_credential(__access_key_id)
+            __secret_access_key = _normalize_credential(__secret_access_key)
         
             S3Client.s3_resource = boto3.resource('s3',
                                             aws_access_key_id=__access_key_id,

@@ -65,7 +65,12 @@ class DataForm:
 
 def run_training_task():
     try:
+        logging.info("========== TRAINING STARTED ==========")
+
         result = TrainPipeline().run_pipeline()
+
+        logging.info(f"Training result: {result}")
+
         with training_status_lock:
             training_status.update(
                 status="completed",
@@ -73,12 +78,16 @@ def run_training_task():
                 metrics=result["metrics"],
                 model_published=result["model_published"],
             )
+
+        logging.info("========== TRAINING COMPLETED ==========")
+
     except Exception as error:
-        logging.error(f"Training failed: {error}")
+        logging.exception("========== TRAINING PIPELINE FAILED ==========")
+
         with training_status_lock:
             training_status.update(
                 status="failed",
-                message="Training failed. Check the application logs for details.",
+                message=f"Training failed: {str(error)}",
                 metrics=None,
                 model_published=False,
             )

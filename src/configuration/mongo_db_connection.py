@@ -24,6 +24,9 @@ class MongoDBClient:
                mongo_db_url = os.getenv(MONGODB_URL_KEY)
                if mongo_db_url is None:
                   raise Exception(f"Environment key: {MONGODB_URL_KEY} is not set.")
+               mongo_db_url = mongo_db_url.strip()
+               if len(mongo_db_url) >= 2 and mongo_db_url[0] == mongo_db_url[-1] and mongo_db_url[0] in "\"'":
+                  mongo_db_url = mongo_db_url[1:-1].strip()
                MongoDBClient.client = pymongo.MongoClient(mongo_db_url, tlsCAFile=ca)
          self.client = MongoDBClient.client
          self.database = self.client[database_name]
