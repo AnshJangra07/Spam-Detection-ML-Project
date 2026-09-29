@@ -12,7 +12,7 @@ Python 3.11, pandas, NumPy, scikit-learn, NLTK, FastAPI, Jinja2, MongoDB, and AW
 
 ## Architecture
 
-![Training and Prediction pipeline](flowchart/pipeline.png)
+![Training and Prediction pipeline](flowchart/Pipeline.png)
 
 ## Folder structure
 
